@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RQ2W8SYQ4S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-RQ2W8SYQ4S');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TraceEPC</title>
+<meta name="description" content="Digital thread traceability for EPC projects — from simulation data to engineering documents.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231A1A1A'/%3E%3Ccircle cx='9' cy='16' r='3' fill='%23fff'/%3E%3Ccircle cx='23' cy='9' r='3' fill='%23fff'/%3E%3Ccircle cx='23' cy='23' r='3' fill='%23fff'/%3E%3Cpath d='M11.5 14.6 20.5 10.4M11.5 17.4l9 4.2' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #F8F8F6;
+    --card: #FFFFFF;
+    --panel: #F1F0EC;
+    --accent: #185FA5;
+    --accent-bg: #E7F0F9;
+    --red: #C62828;
+    --red-bg: #FCEBEB;
+    --amber: #BA7517;
+    --amber-bg: #FBF1E1;
+    --green: #3B6D11;
+    --green-bg: #EBF3E2;
+    --green-dark: #2A4F0B;
+    --btn: #1A1A1A;
+    --text: #1A1A1A;
+    --muted: #6B6A65;
+    --border: #E0DED8;
+    --r-card: 12px;
+    --r-ctl: 6px;
+    --mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+
+  /* Top bar */
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; letter-spacing: -0.01em; cursor: pointer; background: none; border: 0; padding: 0; color: inherit; }
+  .brand svg { flex: none; }
+  .brand small { font-weight: 500; color: var(--muted); font-size: 13px; }
+  .topbar-meta { font-size: 13px; color: var(--muted); text-align: right; }
+
+  main { padding: 28px 0 56px; }
+
+  /* Views + fade */
+  .view { display: none; opacity: 0; transition: opacity 0.3s ease; }
+  .view.shown { display: block; }
+  .view.visible { opacity: 1; }
+
+  /* Common */
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin: 0 0 4px; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.02em; }
+  h2 { font-size: 17px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 6px 0 0; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-card); }
+  .mono { font-family: var(--mono); font-weight: 700; font-size: 14px; }
+  .muted { color: var(--muted); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--btn); color: #fff; border: 1px solid var(--btn);
+    border-radius: var(--r-ctl); padding: 9px 16px; font-weight: 600; font-size: 14px;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .btn:hover { opacity: 0.86; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn.ghost:hover { background: var(--card); opacity: 1; }
+  .btn:focus-visible, .link:focus-visible, .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .link {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0;
+    color: var(--accent); font-weight: 600; font-size: 14px;
+  }
+  .link:hover { text-decoration: underline; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.4;
+  }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .b-synced { background: var(--green-bg); color: var(--green); }
+  .b-outdated { background: var(--red-bg); color: var(--red); }
+  .b-review { background: var(--accent-bg); color: var(--accent); }
+  .b-warn { background: var(--amber-bg); color: var(--amber); }
+  .b-afc { background: var(--green-dark); color: #fff; }
+  .b-afc::before { display: none; }
+
+  /* Dashboard */
+  .dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat { padding: 16px 18px; }
+  .stat .label { font-size: 13px; color: var(--muted); }
+  .stat .value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat.alert { border-color: #EBC4C4; }
+  .stat.alert .value { color: var(--red); }
+  .stat.ok .value { color: var(--green); }
+
+  .section-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 12px; }
+  .equip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .equip { padding: 18px; display: flex; flex-direction: column; gap: 14px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .equip:hover { border-color: #CFCCC3; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+  .equip.has-outdated { border-left: 3px solid var(--red); }
+  .equip.has-warn { border-left: 3px solid var(--amber); }
+  .equip-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .equip .tag { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+  .equip .name { font-weight: 600; margin-top: 2px; }
+  .equip .disc { font-size: 13px; color: var(--muted); }
+  .equip-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px; margin-top: auto; }
+  .equip-foot .count { font-size: 13px; color: var(--muted); }
+
+  /* Detail */
+  .crumbs { margin-bottom: 16px; }
+  .detail-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .detail-head .tag { font-family: var(--mono); font-size: 26px; font-weight: 700; }
+  .detail-grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; align-items: start; }
+  .sim { padding: 20px; }
+  .sim-src { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin: 4px 0 16px; }
+  .sim dl { margin: 0; }
+  .sim .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .sim dt { color: var(--muted); font-size: 14px; }
+  .sim dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .sim dd .old { color: var(--muted); text-decoration: line-through; font-weight: 400; margin-right: 6px; font-size: 13px; }
+  .sim dd.changed .new { color: var(--red); }
+  .sim .rev { margin-top: 6px; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-ctl); font-size: 13px; }
+  .sim .rev strong { display: block; font-size: 14px; }
+  .sim .rev.changed { border-color: #EBC4C4; }
+  .sim .rev.changed strong { color: var(--red); }
+  .sim-actions { margin-top: 16px; }
+  .sim-actions .btn { width: 100%; justify-content: center; }
+  .sim-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; text-align: center; }
+
+  .docs { overflow: hidden; }
+  .docs-head { padding: 18px 20px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; background: var(--panel); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th:first-child, td:first-child { padding-left: 20px; }
+  th:last-child, td:last-child { padding-right: 20px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th.num { text-align: right; }
+  tr.row-outdated td { background: #FFFAFA; }
+  .action { color: var(--red); font-weight: 600; }
+  .src { color: var(--muted); }
+  .dash { color: #B5B2A9; }
+  .new-flag { font-size: 11px; font-weight: 700; color: var(--red); margin-left: 4px; }
+
+  /* Alert view */
+  .alert-banner {
+    display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; margin-bottom: 18px;
+    background: var(--red-bg); border: 1px solid #EBC4C4; border-radius: var(--r-card);
+  }
+  .alert-banner svg { flex: none; margin-top: 2px; }
+  .alert-banner h1 { font-size: 22px; color: var(--red); }
+  .alert-banner p { margin: 4px 0 0; color: #5E1A1A; }
+  .changes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .change { padding: 16px 18px; }
+  .change .label { font-size: 13px; color: var(--muted); }
+  .change .vals { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .change .from { color: var(--muted); text-decoration: line-through; font-size: 15px; }
+  .change .to { font-size: 22px; font-weight: 700; color: var(--red); letter-spacing: -0.01em; }
+  .change .delta { font-size: 12px; font-weight: 600; color: var(--red); background: var(--red-bg); border-radius: 999px; padding: 2px 8px; }
+  .alert-section { margin-bottom: 18px; }
+  .alert-section .docs-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+  .reason { color: var(--green); }
+  .alert-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+  /* Thread diagram */
+  .thread { display: flex; align-items: center; gap: 0; padding: 14px 20px; overflow-x: auto; font-size: 12px; }
+  .node { padding: 6px 10px; border-radius: var(--r-ctl); background: var(--card); border: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
+  .node.hot { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+  .edge { flex: 1 0 22px; height: 1px; background: #CFCCC3; min-width: 22px; position: relative; }
+  .edge::after { content: ""; position: absolute; right: -1px; top: -3px; border: 3.5px solid transparent; border-left: 5px solid #CFCCC3; border-right: 0; }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
+    background: var(--btn); color: #fff; padding: 10px 16px; border-radius: var(--r-ctl);
+    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 10;
+    max-width: calc(100% - 32px);
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  footer { border-top: 1px solid var(--border); padding: 18px 0; font-size: 12px; color: var(--muted); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .detail-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    h1 { font-size: 22px; }
+    .topbar-meta { display: none; }
+    .equip-grid { grid-template-columns: 1fr; }
+    .stat .value { font-size: 24px; }
+    .detail-head .tag { font-size: 22px; }
+    main { padding-top: 20px; }
+    .alert-actions .btn { flex: 1; justify-content: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .view, .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <button class="brand" type="button" data-nav="dashboard" aria-label="TraceEPC — go to dashboard">
+      <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1A1A1A"/><circle cx="9" cy="16" r="3" fill="#fff"/><circle cx="23" cy="9" r="3" fill="#fff"/><circle cx="23" cy="23" r="3" fill="#fff"/><path d="M11.5 14.6 20.5 10.4M11.5 17.4l9 4.2" stroke="#fff" stroke-width="2"/></svg>
+      TraceEPC <small>Digital thread</small>
+    </button>
+    <div class="topbar-meta">Coastal Gas Sweetening Project · Unit 300</div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- VIEW 1 — DASHBOARD -->
+    <section id="view-dashboard" class="view" aria-labelledby="dash-title">
+      <div class="dash-head">
+        <div>
+          <p class="eyebrow">Project · Coastal Gas Sweetening Project</p>
+          <h1 id="dash-title">Unit 300 — Amine Treating</h1>
+          <p class="sub">Traceability from simulation data to engineering deliverables.</p>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="section-title">
+        <h2>Equipment</h2>
+        <span class="muted" style="font-size:13px" id="equip-count"></span>
+      </div>
+      <div class="equip-grid" id="equip-grid"></div>
+    </section>
+
+    <!-- VIEW 2 — EQUIPMENT DETAIL -->
+    <section id="view-detail" class="view" aria-live="polite">
+      <div class="crumbs">
+        <button class="link" type="button" data-nav="dashboard">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to dashboard
+        </button>
+      </div>
+      <div id="detail-body"></div>
+    </section>
+
+    <!-- VIEW 3 — CHANGE ALERT -->
+    <section id="view-alert" class="view" aria-live="polite">
+      <div class="crumbs">
+        <button class="link" type="button" id="back-to-equip">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back to equipment
+        </button>
+      </div>
+      <div id="alert-body"></div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">TraceEPC · Fictional demonstration data · Unit 300 — Amine Treating</div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Icons ---------- */
+  var ICON_LOCK = '<svg width="11" height="11" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="8" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  var ICON_ALERT = '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3z" fill="#C62828"/><path d="M12 10v4.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.2" fill="#fff"/></svg>';
+  var ICON_BOLT = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M9 1 3 9h4l-1 6 6-8H8l1-6z" fill="currentColor"/></svg>';
+  var ICON_RESET = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 2v3h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_ARROW = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_SIM = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+  /* ---------- Fictional data (original state) ---------- */
+  var ORIGINAL = [
+    {
+      tag: 'E-301', name: 'Lean/Rich Amine Exchanger', discipline: 'Process / Mechanical',
+      simSource: 'Aspen EDR',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Lean/Rich Amine', unit: '' },
+        { key: 'area', label: 'Required area', value: '162.0', unit: 'm²' },
+        { key: 'u', label: 'U coefficient', value: '298', unit: 'W/m²·K' },
+        { key: 'dp', label: 'Shell ΔP', value: '0.48', unit: 'bar' }
+      ],
+      rev: 'Rev 3 — 02 Aug 2026',
+      docs: [
+        { id: '300-DS-E301', name: 'Mechanical Datasheet', source: 'EDR area + U', status: 'synced', days: 45 },
+        { id: '300-SPC-E301', name: 'Purchase Specification', source: 'Datasheet Rev B', status: 'synced', days: 30 },
+        { id: '300-CAL-E301', name: 'Calculation Report', source: 'EDR Rev 3', status: 'synced', days: 45 },
+        { id: '300-PID-001', name: 'P&ID Absorber Section', source: 'Process tag E-301', status: 'synced', days: 62 },
+        { id: '300-PFD-001', name: 'Process Flow Diagram', source: 'Base simulation', status: 'afc', days: 90 }
+      ]
+    },
+    {
+      tag: 'E-302', name: 'Amine Cooler', discipline: 'Process / Mechanical',
+      simSource: 'Aspen EDR',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Lean Amine / Cooling Water', unit: '' },
+        { key: 'area', label: 'Required area', value: '84.6', unit: 'm²' },
+        { key: 'u', label: 'U coefficient', value: '415', unit: 'W/m²·K' },
+        { key: 'dp', label: 'Shell ΔP', value: '0.35', unit: 'bar' }
+      ],
+      rev: 'Rev 2 — 18 Jul 2026',
+      docs: [
+        { id: '300-DS-E302', name: 'Mechanical Datasheet', source: 'EDR area + U', status: 'synced', days: 52 },
+        { id: '300-SPC-E302', name: 'Purchase Specification', source: 'Datasheet Rev A', status: 'synced', days: 38 },
+        { id: '300-CAL-E302', name: 'Calculation Report', source: 'EDR Rev 2', status: 'synced', days: 52 },
+        { id: '300-PFD-001', name: 'Process Flow Diagram', source: 'Base simulation', status: 'afc', days: 90 }
+      ]
+    },
+    {
+      tag: 'V-301', name: 'Absorber Column', discipline: 'Process',
+      simSource: 'Aspen HYSYS',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Sour Gas / Lean Amine', unit: '' },
+        { key: 'dia', label: 'Internal diameter', value: '2.40', unit: 'm' },
+        { key: 'trays', label: 'Theoretical stages', value: '20', unit: '' },
+        { key: 'dpc', label: 'Column ΔP', value: '0.21', unit: 'bar' }
+      ],
+      rev: 'Rev 5 — 21 Jul 2026',
+      docs: [
+        { id: '300-DS-V301', name: 'Process Datasheet', source: 'HYSYS column summary', status: 'synced', days: 48 },
+        { id: '300-CAL-V301', name: 'Tray Hydraulics Report', source: 'HYSYS Rev 5', status: 'review', days: 6 },
+        { id: '300-PID-001', name: 'P&ID Absorber Section', source: 'Process tag V-301', status: 'synced', days: 62 },
+        { id: '300-PFD-001', name: 'Process Flow Diagram', source: 'Base simulation', status: 'afc', days: 90 }
+      ]
+    },
+    {
+      tag: 'P-301 A/B', name: 'Amine Circulation Pumps', discipline: 'Mechanical',
+      simSource: 'Aspen HYSYS',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Lean Amine Circulation', unit: '' },
+        { key: 'flow', label: 'Rated flow', value: '145', unit: 'm³/h' },
+        { key: 'head', label: 'Differential head', value: '612', unit: 'm' },
+        { key: 'npsh', label: 'NPSH available', value: '6.8', unit: 'm' }
+      ],
+      rev: 'Rev 4 — 09 Sep 2026',
+      docs: [
+        { id: '300-DS-P301', name: 'Pump Datasheet', source: 'HYSYS rated flow + head', status: 'outdated', action: 'Update rated flow to 145 m³/h', days: 28 },
+        { id: '300-SPC-P301', name: 'Purchase Specification', source: 'Datasheet Rev A', status: 'synced', days: 41 },
+        { id: '300-PID-002', name: 'P&ID Amine Circulation', source: 'Process tag P-301 A/B', status: 'synced', days: 62 }
+      ]
+    },
+    {
+      tag: 'HE-301', name: 'Rich Amine Flash Drum', discipline: 'Process',
+      simSource: 'Aspen HYSYS',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Rich Amine Flash', unit: '' },
+        { key: 'op', label: 'Operating pressure', value: '5.5', unit: 'barg' },
+        { key: 'rt', label: 'Residence time', value: '15', unit: 'min' },
+        { key: 'vol', label: 'Liquid volume', value: '36.3', unit: 'm³' }
+      ],
+      rev: 'Rev 3 — 25 Jul 2026',
+      docs: [
+        { id: '300-DS-HE301', name: 'Process Datasheet', source: 'HYSYS separator sizing', status: 'synced', days: 55 },
+        { id: '300-CAL-HE301', name: 'Vessel Sizing Report', source: 'HYSYS Rev 3', status: 'synced', days: 55 },
+        { id: '300-PID-002', name: 'P&ID Amine Circulation', source: 'Process tag HE-301', status: 'synced', days: 62 }
+      ]
+    },
+    {
+      tag: 'C-301', name: 'Amine Regenerator Column', discipline: 'Process / Mechanical',
+      simSource: 'Aspen Plus',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Rich Amine Regeneration', unit: '' },
+        { key: 'trays', label: 'Theoretical stages', value: '18', unit: '' },
+        { key: 'dia', label: 'Internal diameter', value: '1.80', unit: 'm' },
+        { key: 'duty', label: 'Reboiler duty', value: '6.4', unit: 'MW' }
+      ],
+      rev: 'Rev 2 — 15 Aug 2026',
+      docs: [
+        { id: '300-DS-C301', name: 'Column Datasheet', source: 'Aspen Plus area + trays', status: 'synced', days: 38 },
+        { id: '300-HYD-C301', name: 'Hydraulic Calculation', source: 'Aspen Plus Rev 2', status: 'synced', days: 38 },
+        { id: '300-PID-C301', name: 'P&ID Regenerator', source: 'Process tag C-301', status: 'afc', days: 75 },
+        { id: '300-SPC-C301', name: 'Purchase Specification', source: 'Datasheet Rev A', status: 'synced', days: 20 }
+      ]
+    },
+    {
+      tag: 'P-302', name: 'Reflux Pump', discipline: 'Mechanical',
+      simSource: 'Aspen HYSYS',
+      sim: [
+        { key: 'service', label: 'Service', value: 'Regenerator Reflux', unit: '' },
+        { key: 'flow', label: 'Rated flow', value: '18.5', unit: 'm³/h' },
+        { key: 'head', label: 'Differential head', value: '52.8', unit: 'm' },
+        { key: 'npsh', label: 'NPSH available', value: '4.1', unit: 'm' }
+      ],
+      rev: 'Rev 1 — 10 Jul 2026',
+      docs: [
+        { id: '300-DS-P302', name: 'Pump Datasheet', source: 'HYSYS flow + head', status: 'outdated', action: 'Update differential head — value changed from 45.2 m to 52.8 m', days: 58 },
+        { id: '300-CRV-P302', name: 'Pump Curve', source: 'Vendor data', status: 'synced', days: 30 },
+        { id: '300-SPC-P302', name: 'Purchase Specification', source: 'Datasheet Rev A', status: 'synced', days: 30 }
+      ]
+    },
+    {
+      tag: 'R-301', name: 'Amine Contactor Reactor', discipline: 'Process / Chemical',
+      simSource: 'Aspen Plus',
+      sim: [
+        { key: 'rt', label: 'Residence time', value: '4.2', unit: 'min' },
+        { key: 'temp', label: 'Operating temperature', value: '52', unit: '°C' },
+        { key: 'op', label: 'Operating pressure', value: '6.8', unit: 'bar' },
+        { key: 'vol', label: 'Vessel volume', value: '12.4', unit: 'm³' }
+      ],
+      rev: 'Rev 3 — 01 Sep 2026',
+      docs: [
+        { id: '300-DS-R301', name: 'Reactor Datasheet', source: 'Aspen Plus residence time + temp', status: 'synced', days: 36 },
+        { id: '300-CAL-R301', name: 'Sizing Calculation', source: 'Aspen Plus Rev 3', status: 'synced', days: 36 },
+        { id: '300-SPC-R301', name: 'Purchase Specification', source: 'Datasheet Rev A', status: 'synced', days: 20 },
+        { id: '300-PID-R301', name: 'P&ID Contactor', source: 'Process tag R-301', status: 'afc', days: 80 },
+        { id: '300-SAF-R301', name: 'Safety Data Sheet', source: 'Operating conditions', status: 'synced', days: 36 }
+      ]
+    }
+  ];
+
+  /* ---------- Change scenarios ---------- */
+  var SCENARIOS = {
+    'E-301': {
+      tool: 'Aspen EDR',
+      rev: 'Rev 4 — 14 Sep 2026',
+      fields: { area: '187.4', u: '312' },
+      docs: {
+        '300-DS-E301': { affected: true, action: 'Update area and U coefficient' },
+        '300-SPC-E301': { affected: true, action: 'Revise area and U references' },
+        '300-CAL-E301': { affected: true, action: 'Regenerate from EDR Rev 4' },
+        '300-PID-001': { affected: false, reason: 'Reflects process topology, not numeric values' },
+        '300-PFD-001': { affected: false, reason: 'No change to base process conditions' }
+      }
+    },
+    'R-301': {
+      tool: 'Aspen Plus',
+      rev: 'Rev 4 — 07 Oct 2026',
+      fields: { rt: '5.8', temp: '58' },
+      docs: {
+        '300-DS-R301': { affected: true, action: 'Update residence time and operating temperature' },
+        '300-CAL-R301': { affected: true, action: 'Recalculate vessel sizing from Rev 4' },
+        '300-SPC-R301': { affected: true, action: 'Revise operating conditions in purchase spec' },
+        '300-PID-R301': { affected: false, reason: 'Process topology unchanged' },
+        '300-SAF-R301': { affected: true, action: 'Review safety limits for new temperature (58°C)' }
+      }
+    }
+  };
+
+  var STATUS = {
+    synced:   { label: 'Synced', cls: 'b-synced' },
+    outdated: { label: 'Outdated', cls: 'b-outdated' },
+    review:   { label: 'In review', cls: 'b-review' },
+    afc:      { label: 'Synced (AFC)', cls: 'b-afc' }
+  };
+
+  /* ---------- State ---------- */
+  var state, applied, currentTag = null;
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function resetState() { state = clone(ORIGINAL); applied = {}; }
+  resetState();
+
+  function getEquip(tag) {
+    for (var i = 0; i < state.length; i++) if (state[i].tag === tag) return state[i];
+    return null;
+  }
+  function outdatedCount(eq) {
+    return eq.docs.filter(function (d) { return d.status === 'outdated'; }).length;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function badge(status) {
+    var s = STATUS[status];
+    return '<span class="badge ' + s.cls + '">' + (status === 'afc' ? ICON_LOCK : '') + s.label + '</span>';
+  }
+  function fmtVal(f, v) { return esc(v) + (f.unit ? ' ' + esc(f.unit) : ''); }
+
+  function applyChange(tag) {
+    var sc = SCENARIOS[tag], eq = getEquip(tag);
+    if (!sc || applied[tag]) return;
+    eq.prevRev = eq.rev;
+    eq.rev = sc.rev;
+    eq.sim.forEach(function (f) {
+      if (sc.fields[f.key] !== undefined) { f.prev = f.value; f.value = sc.fields[f.key]; }
+    });
+    eq.docs.forEach(function (d) {
+      var impact = sc.docs[d.id];
+      if (impact && impact.affected) {
+        d.prevStatus = d.status;
+        d.status = 'outdated';
+        d.action = impact.action;
+        d.prevDays = d.days;
+        d.days = 0;
+        d.fresh = true;
+      }
+    });
+    applied[tag] = true;
+  }
+
+  /* ---------- View 1 — Dashboard ---------- */
+  function renderDashboard() {
+    var totalDocs = 0, totalOut = 0, eqOut = 0;
+    state.forEach(function (eq) {
+      totalDocs += eq.docs.length;
+      var n = outdatedCount(eq);
+      totalOut += n;
+      if (n) eqOut++;
+    });
+    var syncedPct = Math.round(((totalDocs - totalOut) / totalDocs) * 100);
+
+    document.getElementById('stats').innerHTML =
+      stat('Equipment items', state.length, '') +
+      stat('Total documents', totalDocs, '') +
+      stat('Outdated documents', totalOut, totalOut ? 'alert' : 'ok') +
+      stat('Documents in sync', syncedPct + '%', totalOut ? '' : 'ok');
+
+    document.getElementById('equip-count').textContent =
+      eqOut ? eqOut + ' of ' + state.length + ' items need attention' : 'All items synced';
+
+    document.getElementById('equip-grid').innerHTML = state.map(function (eq) {
+      var n = outdatedCount(eq);
+      var cls = n >= 2 ? 'has-outdated' : (n === 1 ? 'has-warn' : '');
+      var st = n === 0
+        ? '<span class="badge b-synced">All synced</span>'
+        : '<span class="badge ' + (n >= 2 ? 'b-outdated' : 'b-warn') + '">' + n + ' document' + (n > 1 ? 's' : '') + ' outdated</span>';
+      return '<article class="card equip ' + cls + '">' +
+        '<div class="equip-top"><div>' +
+          '<div class="tag">' + esc(eq.tag) + '</div>' +
+          '<div class="name">' + esc(eq.name) + '</div>' +
+          '<div class="disc">' + esc(eq.discipline) + '</div>' +
+        '</div>' + st + '</div>' +
+        '<div class="equip-foot">' +
+          '<span class="count">' + eq.docs.length + ' linked documents · ' + esc(eq.simSource) + '</span>' +
+          '<button class="btn" type="button" data-detail="' + esc(eq.tag) + '">View details ' + ICON_ARROW + '</button>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+  function stat(label, value, cls) {
+    return '<div class="card stat ' + cls + '"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
+  }
+
+  /* ---------- View 2 — Equipment Detail ---------- */
+  function renderDetail(tag) {
+    var eq = getEquip(tag);
+    var sc = SCENARIOS[tag];
+    var n = outdatedCount(eq);
+
+    var simRows = eq.sim.map(function (f) {
+      var changed = f.prev !== undefined;
+      return '<div class="row"><dt>' + esc(f.label) + (f.unit ? ' (' + esc(f.unit) + ')' : '') + '</dt>' +
+        '<dd class="' + (changed ? 'changed' : '') + '">' +
+          (changed ? '<span class="old">' + esc(f.prev) + '</span>' : '') +
+          '<span class="new">' + esc(f.value) + '</span>' +
+        '</dd></div>';
+    }).join('');
+
+    var btnLabel = applied[tag] ? 'View change alert' : 'Simulate change';
+    var simBtn = sc
+      ? '<button class="btn" type="button" id="simulate-btn">' + ICON_BOLT + btnLabel + '</button>'
+      : '<button class="btn" type="button" disabled>' + ICON_BOLT + 'Simulate change</button>' +
+        '<p class="sim-note">No change scenario available for this item.</p>';
+
+    var docRows = eq.docs.map(function (d) {
+      return '<tr class="' + (d.status === 'outdated' ? 'row-outdated' : '') + '">' +
+        '<td><span class="mono">' + esc(d.id) + '</span></td>' +
+        '<td>' + esc(d.name) + '</td>' +
+        '<td class="src">' + esc(d.source) + '</td>' +
+        '<td>' + badge(d.status) + '</td>' +
+        '<td>' + (d.status === 'outdated' ? '<span class="action">' + esc(d.action) + '</span>' : '<span class="dash">—</span>') + '</td>' +
+        '<td class="num">' + d.days + (d.fresh ? '<span class="new-flag">NEW</span>' : '') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    var docSummary = n
+      ? '<span class="badge ' + (n >= 2 ? 'b-outdated' : 'b-warn') + '">' + n + ' outdated</span>'
+      : '<span class="badge b-synced">All synced</span>';
+
+    document.getElementById('detail-body').innerHTML =
+      '<div class="detail-head"><div>' +
+        '<p class="eyebrow">Unit 300 · ' + esc(eq.discipline) + '</p>' +
+        '<div class="tag">' + esc(eq.tag) + '</div>' +
+        '<h1 style="font-size:20px;margin-top:2px">' + esc(eq.name) + '</h1>' +
+      '</div></div>' +
+      '<div class="detail-grid">' +
+        '<aside class="panel sim">' +
+          '<h2>Simulation data</h2>' +
+          '<div class="sim-src">' + ICON_SIM + 'Source: ' + esc(eq.simSource) + '</div>' +
+          '<dl>' + simRows + '</dl>' +
+          '<div class="rev ' + (eq.prevRev ? 'changed' : '') + '">' +
+            '<span class="muted">Last simulation revision</span>' +
+            '<strong>' + esc(eq.rev) + '</strong>' +
+            (eq.prevRev ? '<span class="muted">Previously ' + esc(eq.prevRev) + '</span>' : '') +
+          '</div>' +
+          '<div class="sim-actions">' + simBtn + '</div>' +
+        '</aside>' +
+        '<section class="card docs">' +
+          '<div class="docs-head"><h2>Linked documents</h2>' + docSummary + '</div>' +
+          '<div class="table-wrap"><table>' +
+            '<thead><tr><th>Document ID</th><th>Document name</th><th>Data source</th><th>Status</th><th>Action required</th><th class="num">Days</th></tr></thead>' +
+            '<tbody>' + docRows + '</tbody>' +
+          '</table></div>' +
+        '</section>' +
+      '</div>';
+
+    var b = document.getElementById('simulate-btn');
+    if (b) b.addEventListener('click', function () {
+      applyChange(tag);
+      go('alert', tag);
+    });
+  }
+
+  /* ---------- View 3 — Change Alert ---------- */
+  function renderAlert(tag) {
+    var eq = getEquip(tag);
+    var sc = SCENARIOS[tag];
+
+    var changes = eq.sim.filter(function (f) { return f.prev !== undefined; }).map(function (f) {
+      var from = parseFloat(f.prev), to = parseFloat(f.value);
+      // Temperatures get an absolute delta; a percentage of °C is meaningless
+      var diff = f.unit === '°C' ? to - from : ((to - from) / from) * 100;
+      var delta = (diff >= 0 ? '+' : '') + (f.unit === '°C' ? diff + ' °C' : diff.toFixed(1) + '%');
+      return '<div class="card change">' +
+        '<div class="label">' + esc(f.label) + '</div>' +
+        '<div class="vals"><span class="from">' + fmtVal(f, f.prev) + '</span>' + ICON_ARROW +
+        '<span class="to">' + fmtVal(f, f.value) + '</span>' +
+        '<span class="delta">' + esc(delta) + '</span></div>' +
+      '</div>';
+    }).join('') +
+      '<div class="card change"><div class="label">Simulation revision</div>' +
+      '<div class="vals"><span class="from">' + esc(eq.prevRev.split(' — ')[0]) + '</span>' + ICON_ARROW +
+      '<span class="to">' + esc(eq.rev.split(' — ')[0]) + '</span>' +
+      '<span class="muted" style="font-size:13px">' + esc(eq.rev.split(' — ')[1]) + '</span></div></div>';
+
+    var affected = eq.docs.filter(function (d) { return sc.docs[d.id] && sc.docs[d.id].affected; });
+    var unaffected = eq.docs.filter(function (d) { return !(sc.docs[d.id] && sc.docs[d.id].affected); });
+
+    var thread = '<div class="thread" aria-label="Digital thread">' +
+      '<span class="node hot">' + esc(sc.tool) + ' ' + esc(eq.rev.split(' — ')[0]) + '</span>' +
+      affected.map(function (d) { return '<span class="edge"></span><span class="node hot">' + esc(d.id) + '</span>'; }).join('') +
+      '</div>';
+
+    var affRows = affected.map(function (d) {
+      return '<tr class="row-outdated">' +
+        '<td><span class="mono">' + esc(d.id) + '</span></td>' +
+        '<td>' + esc(d.name) + '</td>' +
+        '<td class="src">' + esc(d.source) + '</td>' +
+        '<td>' + badge(d.prevStatus) + '</td>' +
+        '<td>' + badge(d.status) + '</td>' +
+        '<td><span class="action">' + esc(d.action) + '</span></td>' +
+      '</tr>';
+    }).join('');
+
+    var unRows = unaffected.map(function (d) {
+      var impact = sc.docs[d.id];
+      return '<tr>' +
+        '<td><span class="mono">' + esc(d.id) + '</span></td>' +
+        '<td>' + esc(d.name) + '</td>' +
+        '<td class="src">' + esc(d.source) + '</td>' +
+        '<td>' + badge(d.status) + '</td>' +
+        '<td class="reason">' + esc(impact ? impact.reason : 'Not linked to changed values') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('alert-body').innerHTML =
+      '<div class="alert-banner">' + ICON_ALERT + '<div>' +
+        '<h1>Change detected — ' + esc(eq.tag) + '</h1>' +
+        '<p>' + esc(sc.tool) + ' simulation updated to ' + esc(eq.rev) + '. ' +
+        affected.length + ' of ' + eq.docs.length + ' linked documents are now out of sync with their source data.</p>' +
+      '</div></div>' +
+      '<div class="changes">' + changes + '</div>' +
+
+      '<section class="card docs alert-section">' +
+        '<div class="docs-head"><div><h2>Affected documents</h2><p>Driven by changed simulation values</p></div>' +
+        '<span class="badge b-outdated">' + affected.length + ' outdated</span></div>' +
+        thread +
+        '<div class="table-wrap"><table>' +
+          '<thead><tr><th>Document ID</th><th>Document name</th><th>Data source</th><th>Was</th><th>New status</th><th>Action required</th></tr></thead>' +
+          '<tbody>' + affRows + '</tbody>' +
+        '</table></div>' +
+      '</section>' +
+
+      '<section class="card docs alert-section">' +
+        '<div class="docs-head"><div><h2>Not affected</h2><p>Remain synced — no dependency on changed values</p></div>' +
+        '<span class="badge b-synced">' + unaffected.length + ' synced</span></div>' +
+        '<div class="table-wrap"><table>' +
+          '<thead><tr><th>Document ID</th><th>Document name</th><th>Data source</th><th>Status</th><th>Reason</th></tr></thead>' +
+          '<tbody>' + unRows + '</tbody>' +
+        '</table></div>' +
+      '</section>' +
+
+      '<div class="alert-actions">' +
+        '<button class="btn ghost" type="button" id="reset-btn">' + ICON_RESET + 'Reset</button>' +
+        '<button class="btn" type="button" id="alert-back-btn">Back to equipment ' + ICON_ARROW + '</button>' +
+      '</div>';
+
+    document.getElementById('reset-btn').addEventListener('click', function () {
+      resetState();
+      toast('All data reset to original state');
+      go('detail', tag);
+    });
+    document.getElementById('alert-back-btn').addEventListener('click', function () { go('detail', tag); });
+  }
+
+  /* ---------- Navigation with fade ---------- */
+  var VIEWS = { dashboard: 'view-dashboard', detail: 'view-detail', alert: 'view-alert' };
+  var activeView = null, navTimer = null;
+
+  function go(name, tag) {
+    if (tag) currentTag = tag;
+    var next = document.getElementById(VIEWS[name]);
+    var prev = activeView ? document.getElementById(VIEWS[activeView]) : null;
+
+    function show() {
+      if (name === 'dashboard') renderDashboard();
+      if (name === 'detail') renderDetail(currentTag);
+      if (name === 'alert') renderAlert(currentTag);
+      if (prev) prev.classList.remove('shown');
+      next.classList.add('shown');
+      void next.offsetWidth; // restart transition
+      next.classList.add('visible');
+      window.scrollTo(0, 0);
+      activeView = name;
+    }
+
+    clearTimeout(navTimer);
+    if (prev && prev.classList.contains('visible')) {
+      prev.classList.remove('visible');
+      navTimer = setTimeout(show, 300);
+    } else {
+      show();
+    }
+  }
+
+  /* ---------- Toast ---------- */
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('on'); }, 2400);
+  }
+
+  /* ---------- Event wiring ---------- */
+  document.addEventListener('click', function (e) {
+    var nav = e.target.closest('[data-nav]');
+    if (nav) { go(nav.getAttribute('data-nav')); return; }
+    var det = e.target.closest('[data-detail]');
+    if (det) { go('detail', det.getAttribute('data-detail')); }
+  });
+  document.getElementById('back-to-equip').addEventListener('click', function () { go('detail', currentTag); });
+
+  go('dashboard');
+})();
+</script>
+</body>
+</html>
